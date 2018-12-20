@@ -56,14 +56,14 @@ namespace DBExportWord
 
             Console.WriteLine($"总计 {result.Count} 表, 开始生成文档...");
             List<TableMapping> listMapping = new List<TableMapping>();
-            listMapping.Add(new TableMapping() { DBColumn = "", DocumentColum = "序号" });
-            listMapping.Add(new TableMapping() { DBColumn = "code", DocumentColum = "名称" });
-            listMapping.Add(new TableMapping() { DBColumn = "comment", DocumentColum = "描述" });
-            listMapping.Add(new TableMapping() { DBColumn = "DataType", DocumentColum = "类型" });
-            listMapping.Add(new TableMapping() { DBColumn = "DataLength", DocumentColum = "长度" });
-            listMapping.Add(new TableMapping() { DBColumn = "columnKey", DocumentColum = "主键" });
-            listMapping.Add(new TableMapping() { DBColumn = "IsNullable", DocumentColum = "可空" });
-            listMapping.Add(new TableMapping() { DBColumn = "defaultValue", DocumentColum = "缺省值" });
+            listMapping.Add(new TableMapping() { DBColumn = "", DocumentColumn = "序号",  ColumnWidth = 1000 });
+            listMapping.Add(new TableMapping() { DBColumn = "code", DocumentColumn = "名称", ColumnWidth = 1000 });
+            listMapping.Add(new TableMapping() { DBColumn = "comment", DocumentColumn = "描述", ColumnWidth = 1000 });
+            listMapping.Add(new TableMapping() { DBColumn = "DataType", DocumentColumn = "类型", ColumnWidth = 1000 });
+            listMapping.Add(new TableMapping() { DBColumn = "DataLength", DocumentColumn = "长度", ColumnWidth = 1000 });
+            listMapping.Add(new TableMapping() { DBColumn = "columnKey", DocumentColumn = "主键",  ColumnWidth = 1000 });
+            listMapping.Add(new TableMapping() { DBColumn = "IsNullable", DocumentColumn = "可空", ColumnWidth = 1000 });
+            listMapping.Add(new TableMapping() { DBColumn = "defaultValue", DocumentColumn = "缺省值", ColumnWidth = 1000 });
 
             ExportDocument(result, listMapping, "123.doc");
             // select table_name from information_schema.tables where table_schema = 'csdb' and table_type = 'base table';
@@ -127,60 +127,50 @@ namespace DBExportWord
                 gp.Style = "Heading1";
                 gp.SetNumID($"1.1.{tableNum}");
                 //单倍为默认值（240）不需设置，1.5倍=240X1.5=360，2倍=240X2=480
-                //p.AddNewPPr().AddNewSpacing().line = "400";//固定20磅
-                //p.AddNewPPr().AddNewSpacing().lineRule = ST_LineSpacingRule.exact;
+                p.AddNewPPr().AddNewSpacing().line = "400";//固定20磅
+                p.AddNewPPr().AddNewSpacing().lineRule = ST_LineSpacingRule.exact;
 
                 gr = gp.CreateRun();
-                //CT_RPr rpr = gr.GetCTR().AddNewRPr();
-                //CT_Fonts rfonts = rpr.AddNewRFonts();
-                //rfonts.ascii = setting.MainContentSetting.FontName;
-                //rfonts.eastAsia = setting.MainContentSetting.FontName;
-                //rpr.AddNewSz().val = (ulong)setting.MainContentSetting.FontSize;//5号字体-21
-                //rpr.AddNewSzCs().val = (ulong)setting.MainContentSetting.FontSize;
-                //rpr.AddNewB().val = setting.MainContentSetting.HasBold;
-                gr.SetText($"{table.TableName}({table.TableComment})");
+                gr.SetText($"{table.TableName} ({table.TableComment})");
 
                 var listTableSchema = GetTableSchema<TableSchema>(MysqlGetTableSchemaSQL(table.TableName));
 
                 XWPFTable docTable = doc.CreateTable(listTableSchema.Count + 1, 8);
 
                 int i = 0;
-                foreach (var tableHeader in listMapping)
+                foreach (var tableMapping in listMapping)
                 {
-                    docTable.GetRow(0).GetCell(i).SetColor("#CCCCCC");
-                    XWPFParagraph pIO = docTable.GetRow(0).GetCell(i).AddParagraph();
-                    pIO.Alignment = ParagraphAlignment.CENTER;
-
-                    XWPFRun rIO = pIO.CreateRun();
-                    rIO.FontSize = 10;
-                    rIO.IsBold = true;
-                    rIO.SetText(tableHeader.DocumentColum);
+                    var currentCell = docTable.GetRow(0).GetCell(i);
+                    currentCell = SetCell(currentCell, tableMapping.DocumentColumn, tableMapping.ColumnWidth, "CCCCCC");
                     i++;
                 }
                 int rowIndex = 1;
                 foreach (var tableSchema in listTableSchema)
                 {
                     int cellIndex = 0;
-                    foreach (var tableHeader in listMapping)
+                    foreach (var tableMapping in listMapping)
                     {
                         var currentCell = docTable.GetRow(rowIndex).GetCell(cellIndex);
+                        string color = string.Empty;
+                        string text = string.Empty;
+                        bool isCemter = false;
                         if (rowIndex % 2 == 0)
                         {
-                            currentCell.SetColor("#DDDDDD");
+                            color = "DDDDDD";
                         }
 
-                        XWPFParagraph pIO = currentCell.AddParagraph();
-                        XWPFRun rIO = pIO.CreateRun();
-                        rIO.FontSize = 9;
-                        if (string.IsNullOrEmpty(tableHeader.DBColumn))
+                        if (string.IsNullOrEmpty(tableMapping.DBColumn))
                         {
-                            rIO.SetText(rowIndex.ToString());
-                            pIO.Alignment = ParagraphAlignment.CENTER;
+                            text = rowIndex.ToString();
+                            isCemter = true;
                         }
                         else
                         {
-                            rIO.SetText(tableHeader.DBColumn);
+                            text = GetPropValue(tableSchema, tableMapping.DBColumn);
                         }
+
+                        currentCell = SetCell(currentCell, text, tableMapping.ColumnWidth, color, isCemter);
+
                         cellIndex++;
                     }
                     rowIndex++;
@@ -198,6 +188,45 @@ namespace DBExportWord
                 fs.Flush();
             }
             ms.Close();
+        }
+
+        private static XWPFTableCell SetCell(XWPFTableCell cell, string text, int width, string color = "", bool isCenter = true)
+        {
+            if (!string.IsNullOrEmpty(color))
+            {
+                cell.SetColor(color);
+            }
+            CT_Tc cttc = cell.GetCTTc();
+            CT_TcPr ctpr = cttc.AddNewTcPr();
+            if (isCenter)
+            {
+                cttc.GetPList()[0].AddNewPPr().AddNewJc().val = ST_Jc.center;//水平居中
+            }
+            ctpr.AddNewVAlign().val = ST_VerticalJc.center;//垂直居中
+
+            ctpr.tcW = new CT_TblWidth();
+            ctpr.tcW.w = width.ToString();//默认列宽
+            ctpr.tcW.type = ST_TblWidth.dxa;
+
+            text = text == "PRI" ? "Y" : text;
+            text = text == "YES" ? "Y" : text;
+            text = text == "NO" ? "N" : text;
+
+            cell.SetText(text);
+
+            return cell;
+        }
+
+        /// <summary>
+        /// 根据字段获取属性的值
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="propName"></param>
+        /// <returns></returns>
+        private static string GetPropValue(object data, string propName)
+        {
+            object value = data.GetType().GetProperty(propName).GetValue(data, null);
+            return null == value ? string.Empty : value.ToString();
         }
     }
 
@@ -226,7 +255,9 @@ namespace DBExportWord
     public class TableMapping
     {
         public string DBColumn { get; set; }
-        public string DocumentColum { get; set; }
+        public string DocumentColumn { get; set; }
+        public int ColumnWidth { get; set; }
 
+  
     }
 }
