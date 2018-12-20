@@ -123,11 +123,12 @@ namespace DBExportWord
                 {
                     //IndentationFirstLine = 2
                 };
+                string s=gp.StyleID;
                 gp.Style = "Heading1";
-                gp.SetNumID($"1.1.{tableNum}");
+                gp.SetNumID($"{tableNum}","1.1");
                 //单倍为默认值（240）不需设置，1.5倍=240X1.5=360，2倍=240X2=480
-                p.AddNewPPr().AddNewSpacing().line = "400";//固定20磅
-                p.AddNewPPr().AddNewSpacing().lineRule = ST_LineSpacingRule.exact;
+                //p.AddNewPPr().AddNewSpacing().line = "400";//固定20磅
+                //p.AddNewPPr().AddNewSpacing().lineRule = ST_LineSpacingRule.exact;
 
                 gr = gp.CreateRun();
                 gr.SetText($"{table.TableName} ({table.TableComment})");
@@ -141,7 +142,9 @@ namespace DBExportWord
                 {
                     var currentCell = docTable.GetRow(0).GetCell(i);
                     currentCell = SetCell(currentCell, tableMapping.DocumentColumn, tableMapping.ColumnWidth, "CCCCCC");
-                    
+                    //var ppr = currentCell.GetCTTc().AddNewP().AddNewPPr();
+                    //space.line="0";
+                    //space.lineRule = ST_LineSpacingRule.auto;
                     i++;
                 }
                 int rowIndex = 1;
@@ -153,7 +156,6 @@ namespace DBExportWord
                         var currentCell = docTable.GetRow(rowIndex).GetCell(cellIndex);
                         string color = string.Empty;
                         string text = string.Empty;
-                        bool isCemter = false;
                         if (rowIndex % 2 == 0)
                         {
                             color = "DDDDDD";
@@ -207,6 +209,7 @@ namespace DBExportWord
             text = text == "PRI" ? "Y" : text;
             text = text == "YES" ? "Y" : text;
             text = text == "NO" ? "N" : text;
+            text = text == "CURRENT_TIMESTAMP" ? "now()" : text;
             if (!string.IsNullOrEmpty(color))
             {
                 cell.SetColor(color);
