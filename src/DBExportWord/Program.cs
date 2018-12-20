@@ -58,14 +58,13 @@ namespace DBExportWord
             List<TableMapping> listMapping = new List<TableMapping>();
             listMapping.Add(new TableMapping() { DBColumn = "", DocumentColumn = "序号",  ColumnWidth = 1000 });
             listMapping.Add(new TableMapping() { DBColumn = "code", DocumentColumn = "名称", ColumnWidth = 1000 });
-            listMapping.Add(new TableMapping() { DBColumn = "comment", DocumentColumn = "描述", ColumnWidth = 1000 });
+            listMapping.Add(new TableMapping() { DBColumn = "comment", DocumentColumn = "描述", ColumnWidth = 2600, IsCenter=false });
             listMapping.Add(new TableMapping() { DBColumn = "DataType", DocumentColumn = "类型", ColumnWidth = 1000 });
             listMapping.Add(new TableMapping() { DBColumn = "DataLength", DocumentColumn = "长度", ColumnWidth = 1000 });
             listMapping.Add(new TableMapping() { DBColumn = "columnKey", DocumentColumn = "主键",  ColumnWidth = 1000 });
             listMapping.Add(new TableMapping() { DBColumn = "IsNullable", DocumentColumn = "可空", ColumnWidth = 1000 });
             listMapping.Add(new TableMapping() { DBColumn = "defaultValue", DocumentColumn = "缺省值", ColumnWidth = 1000 });
-
-            ExportDocument(result, listMapping, "123.doc");
+            ExportDocument(result, listMapping, "123.docx");
             // select table_name from information_schema.tables where table_schema = 'csdb' and table_type = 'base table';
 
             Console.WriteLine($"文档生成成功");
@@ -142,6 +141,7 @@ namespace DBExportWord
                 {
                     var currentCell = docTable.GetRow(0).GetCell(i);
                     currentCell = SetCell(currentCell, tableMapping.DocumentColumn, tableMapping.ColumnWidth, "CCCCCC");
+                    
                     i++;
                 }
                 int rowIndex = 1;
@@ -162,14 +162,13 @@ namespace DBExportWord
                         if (string.IsNullOrEmpty(tableMapping.DBColumn))
                         {
                             text = rowIndex.ToString();
-                            isCemter = true;
                         }
                         else
                         {
                             text = GetPropValue(tableSchema, tableMapping.DBColumn);
                         }
 
-                        currentCell = SetCell(currentCell, text, tableMapping.ColumnWidth, color, isCemter);
+                        currentCell = SetCell(currentCell, text, tableMapping.ColumnWidth, color, tableMapping.IsCenter);
 
                         cellIndex++;
                     }
@@ -192,10 +191,7 @@ namespace DBExportWord
 
         private static XWPFTableCell SetCell(XWPFTableCell cell, string text, int width, string color = "", bool isCenter = true)
         {
-            if (!string.IsNullOrEmpty(color))
-            {
-                cell.SetColor(color);
-            }
+           
             CT_Tc cttc = cell.GetCTTc();
             CT_TcPr ctpr = cttc.AddNewTcPr();
             if (isCenter)
@@ -211,7 +207,10 @@ namespace DBExportWord
             text = text == "PRI" ? "Y" : text;
             text = text == "YES" ? "Y" : text;
             text = text == "NO" ? "N" : text;
-
+            if (!string.IsNullOrEmpty(color))
+            {
+                cell.SetColor(color);
+            }
             cell.SetText(text);
 
             return cell;
@@ -258,6 +257,6 @@ namespace DBExportWord
         public string DocumentColumn { get; set; }
         public int ColumnWidth { get; set; }
 
-  
+        public bool IsCenter { get; set; } = true;
     }
 }
