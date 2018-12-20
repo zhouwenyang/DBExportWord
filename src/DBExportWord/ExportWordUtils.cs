@@ -171,7 +171,7 @@ public class ExportWordUtils
     /// </summary>
     /// <param name="type"></param>
     /// <returns></returns>
-    private static Tuple<int, int> GetPaperSize(PaperType type)
+    public static Tuple<int, int> GetPaperSize(PaperType type)
     {
         Tuple<int, int> res = null;
         switch (type)
