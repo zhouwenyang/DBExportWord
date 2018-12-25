@@ -56,14 +56,14 @@ namespace DBExportWord
 
             Console.WriteLine($"总计 {result.Count} 表, 开始生成文档...");
             List<TableMapping> listMapping = new List<TableMapping>();
-            listMapping.Add(new TableMapping() { DBColumn = "", DocumentColumn = "序号",  ColumnWidth = 1000 });
+            listMapping.Add(new TableMapping() { DBColumn = "", DocumentColumn = "序号", ColumnWidth = 1000 });
             listMapping.Add(new TableMapping() { DBColumn = "code", DocumentColumn = "名称", ColumnWidth = 1000 });
-            listMapping.Add(new TableMapping() { DBColumn = "comment", DocumentColumn = "描述", ColumnWidth = 2600, IsCenter=false });
+            listMapping.Add(new TableMapping() { DBColumn = "comment", DocumentColumn = "描述", ColumnWidth = 2600, IsCenter = false });
             listMapping.Add(new TableMapping() { DBColumn = "DataType", DocumentColumn = "类型", ColumnWidth = 1000 });
             listMapping.Add(new TableMapping() { DBColumn = "DataLength", DocumentColumn = "长度", ColumnWidth = 1000 });
-            listMapping.Add(new TableMapping() { DBColumn = "columnKey", DocumentColumn = "主键",  ColumnWidth = 1000 });
+            listMapping.Add(new TableMapping() { DBColumn = "columnKey", DocumentColumn = "主键", ColumnWidth = 1000 });
             listMapping.Add(new TableMapping() { DBColumn = "IsNullable", DocumentColumn = "可空", ColumnWidth = 1000 });
-            listMapping.Add(new TableMapping() { DBColumn = "defaultValue", DocumentColumn = "缺省值", ColumnWidth = 1000 });
+            listMapping.Add(new TableMapping() { DBColumn = "defaultValue", DocumentColumn = "缺省", ColumnWidth = 1000 });
             ExportDocument(result, listMapping, "123.docx");
             // select table_name from information_schema.tables where table_schema = 'csdb' and table_type = 'base table';
 
@@ -80,9 +80,17 @@ namespace DBExportWord
         /// <param name="setting"></param>
         public static void ExportDocument(List<Table> listTable, List<TableMapping> listMapping, string fileName)
         {
-            XWPFDocument doc = new XWPFDocument();
+
+            XWPFDocument doc = new XWPFDocument(NPOI.OpenXml4Net.OPC.OPCPackage.Open("12345.docx"));
+
             MemoryStream ms = new MemoryStream();
             DocumentSetting setting = new DocumentSetting();
+
+            int docItemsCount = doc.BodyElements.Count;
+            for ( int i=0;i< docItemsCount;i++)
+            {
+                doc.RemoveBodyElement(0);
+            }
 
             //设置文档
             doc.Document.body.sectPr = new CT_SectPr();
@@ -91,52 +99,36 @@ namespace DBExportWord
             Tuple<int, int> size = GetPaperSize(setting.PaperType);
             setPr.pgSz.w = (ulong)size.Item1;
             setPr.pgSz.h = (ulong)size.Item2;
-            //创建一个段落
-            CT_P p = doc.Document.body.AddNewP();
-            //段落水平居中
-            p.AddNewPPr().AddNewJc().val = ST_Jc.center;
-            XWPFParagraph gp = new XWPFParagraph(p, doc);
 
-            XWPFRun gr = gp.CreateRun();
-            //创建标题
-            if (!string.IsNullOrEmpty(setting.TitleSetting.Title))
-            {
-                gr.GetCTR().AddNewRPr().AddNewRFonts().ascii = setting.TitleSetting.FontName;
-                gr.GetCTR().AddNewRPr().AddNewRFonts().eastAsia = setting.TitleSetting.FontName;
-                gr.GetCTR().AddNewRPr().AddNewRFonts().hint = ST_Hint.eastAsia;
-                gr.GetCTR().AddNewRPr().AddNewSz().val = (ulong)setting.TitleSetting.FontSize;//2号字体
-                gr.GetCTR().AddNewRPr().AddNewSzCs().val = (ulong)setting.TitleSetting.FontSize;
-                gr.GetCTR().AddNewRPr().AddNewB().val = setting.TitleSetting.HasBold; //加粗
-                gr.GetCTR().AddNewRPr().AddNewColor().val = "black";//字体颜色
-                gr.SetText(setting.TitleSetting.Title);
-            }
             int tableNum = 0;
             foreach (var table in listTable)
             {
                 tableNum++;
-                Console.WriteLine($"正在处理表 {tableNum}.{table.TableName} 表");
 
-
-                p = doc.Document.body.AddNewP();
-                p.AddNewPPr().AddNewJc().val = ST_Jc.both;
-                gp = new XWPFParagraph(p, doc)
+                string tableTitle = table.TableName;
+                if(!string.IsNullOrEmpty(table.TableComment))
                 {
-                    //IndentationFirstLine = 2
-                };
-                string s=gp.StyleID;
-                gp.Style = "Heading1";
-                gp.SetNumID($"{tableNum}","1.1");
-                //单倍为默认值（240）不需设置，1.5倍=240X1.5=360，2倍=240X2=480
-                //p.AddNewPPr().AddNewSpacing().line = "400";//固定20磅
-                //p.AddNewPPr().AddNewSpacing().lineRule = ST_LineSpacingRule.exact;
+                    tableTitle = $"{table.TableComment} {tableTitle}";
+                }
 
-                gr = gp.CreateRun();
-                gr.SetText($"{table.TableName} ({table.TableComment})");
+                Console.WriteLine($"正在处理 {tableNum}.{tableTitle}");
 
+                //创建一个段落
+                XWPFParagraph gp = doc.CreateParagraph();
+
+                XWPFStyles styles = doc.CreateStyles();
+                
+                //表格段落标题
+                gp.SetNumID($"2.1");
+                gp.Style = "Heading2";
+                XWPFRun gr = gp.CreateRun();
+                gr.SetText($"{tableTitle}");
+
+                //获取表字段信息
                 var listTableSchema = GetTableSchema<TableSchema>(MysqlGetTableSchemaSQL(table.TableName));
 
-                XWPFTable docTable = doc.CreateTable(listTableSchema.Count + 1, 8);
-
+                //创建表格
+                XWPFTable docTable = doc.CreateTable(listTableSchema.Count + 1, listMapping.Count);
                 int i = 0;
                 foreach (var tableMapping in listMapping)
                 {
@@ -189,11 +181,12 @@ namespace DBExportWord
                 fs.Flush();
             }
             ms.Close();
+
         }
 
         private static XWPFTableCell SetCell(XWPFTableCell cell, string text, int width, string color = "", bool isCenter = true)
         {
-           
+
             CT_Tc cttc = cell.GetCTTc();
             CT_TcPr ctpr = cttc.AddNewTcPr();
             if (isCenter)
@@ -201,7 +194,7 @@ namespace DBExportWord
                 cttc.GetPList()[0].AddNewPPr().AddNewJc().val = ST_Jc.center;//水平居中
             }
             ctpr.AddNewVAlign().val = ST_VerticalJc.center;//垂直居中
-
+            
             ctpr.tcW = new CT_TblWidth();
             ctpr.tcW.w = width.ToString();//默认列宽
             ctpr.tcW.type = ST_TblWidth.dxa;
@@ -214,6 +207,14 @@ namespace DBExportWord
             {
                 cell.SetColor(color);
             }
+
+            //设置文字样式
+            //ctpr.cnfStyle = new CT_Cnf();
+            //ctpr.cnfStyle.val = "NoSpacing";
+
+            
+            //cttc.AddNewP().AddNewPPr().AddNewPStyle().val = "NoSpacing";
+
             cell.SetText(text);
 
             return cell;
