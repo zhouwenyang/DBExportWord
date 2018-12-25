@@ -87,7 +87,7 @@ namespace DBExportWord
             DocumentSetting setting = new DocumentSetting();
 
             int docItemsCount = doc.BodyElements.Count;
-            for ( int i=0;i< docItemsCount;i++)
+            for (int i = 0; i < docItemsCount; i++)
             {
                 doc.RemoveBodyElement(0);
             }
@@ -106,7 +106,7 @@ namespace DBExportWord
                 tableNum++;
 
                 string tableTitle = table.TableName;
-                if(!string.IsNullOrEmpty(table.TableComment))
+                if (!string.IsNullOrEmpty(table.TableComment))
                 {
                     tableTitle = $"{table.TableComment} {tableTitle}";
                 }
@@ -117,7 +117,7 @@ namespace DBExportWord
                 XWPFParagraph gp = doc.CreateParagraph();
 
                 XWPFStyles styles = doc.CreateStyles();
-                
+
                 //表格段落标题
                 gp.SetNumID($"2.1");
                 gp.Style = "Heading2";
@@ -133,7 +133,7 @@ namespace DBExportWord
                 foreach (var tableMapping in listMapping)
                 {
                     var currentCell = docTable.GetRow(0).GetCell(i);
-                    currentCell = SetCell(currentCell, tableMapping.DocumentColumn, tableMapping.ColumnWidth, "CCCCCC");
+                    currentCell = SetCell(currentCell, tableMapping.DocumentColumn, tableMapping.ColumnWidth, "CCCCCC", true, 11, true);
                     //var ppr = currentCell.GetCTTc().AddNewP().AddNewPPr();
                     //space.line="0";
                     //space.lineRule = ST_LineSpacingRule.auto;
@@ -162,7 +162,7 @@ namespace DBExportWord
                             text = GetPropValue(tableSchema, tableMapping.DBColumn);
                         }
 
-                        currentCell = SetCell(currentCell, text, tableMapping.ColumnWidth, color, tableMapping.IsCenter);
+                        currentCell = SetCell(currentCell, text, tableMapping.ColumnWidth, color, tableMapping.IsCenter, 10);
 
                         cellIndex++;
                     }
@@ -184,38 +184,43 @@ namespace DBExportWord
 
         }
 
-        private static XWPFTableCell SetCell(XWPFTableCell cell, string text, int width, string color = "", bool isCenter = true)
+        private static XWPFTableCell SetCell(XWPFTableCell cell, string text, int width, string color = "", bool isCenter = true, int fontSize = 0, bool isBold = false)
         {
 
             CT_Tc cttc = cell.GetCTTc();
             CT_TcPr ctpr = cttc.AddNewTcPr();
-            if (isCenter)
-            {
-                cttc.GetPList()[0].AddNewPPr().AddNewJc().val = ST_Jc.center;//水平居中
-            }
-            ctpr.AddNewVAlign().val = ST_VerticalJc.center;//垂直居中
-            
+            //垂直居中
+            ctpr.AddNewVAlign().val = ST_VerticalJc.center;
+            //设置单元格列宽
             ctpr.tcW = new CT_TblWidth();
-            ctpr.tcW.w = width.ToString();//默认列宽
+            ctpr.tcW.w = width.ToString();
             ctpr.tcW.type = ST_TblWidth.dxa;
-
-            text = text == "PRI" ? "Y" : text;
-            text = text == "YES" ? "Y" : text;
-            text = text == "NO" ? "N" : text;
-            text = text == "CURRENT_TIMESTAMP" ? "now()" : text;
+            //设置单元格背景色
             if (!string.IsNullOrEmpty(color))
             {
                 cell.SetColor(color);
             }
-
-            //设置文字样式
-            //ctpr.cnfStyle = new CT_Cnf();
-            //ctpr.cnfStyle.val = "NoSpacing";
-
-            
-            //cttc.AddNewP().AddNewPPr().AddNewPStyle().val = "NoSpacing";
-
-            cell.SetText(text);
+            //设置文本
+            text = text == "PRI" ? "Y" : text;
+            text = text == "YES" ? "Y" : text;
+            text = text == "NO" ? "N" : text;
+            text = text == "CURRENT_TIMESTAMP" ? "now()" : text;
+            cell.RemoveParagraph(0);
+            XWPFParagraph gp = cell.AddParagraph();
+            if (isCenter)
+            {
+                //水平居中
+                gp.Alignment = ParagraphAlignment.CENTER;
+            }
+            //文字格式
+            gp.Style = "NoSpacing";
+            XWPFRun gr = gp.CreateRun();
+            if (fontSize > 0)
+            {
+                gr.FontSize = fontSize;
+            }
+            gr.IsBold = isBold;
+            gr.SetText(text);
 
             return cell;
         }
