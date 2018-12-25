@@ -12,26 +12,36 @@ namespace DBExportWord
 {
     class Program
     {
+        static string _dataBaseName = "mintcode_tuotuo";
         static string _MySqlGetConnectionString
         {
             get
             {
-                return "server=172.16.8.7;database=mintcode_tuotuo;uid=root;pwd=p@ssw0rd;";
+                //return $"server=127.0.0.1;database={_dataBaseName};uid=root;pwd=perfect2018;";
+                return $"server=172.16.8.7;database={_dataBaseName};uid=root;pwd=p@ssw0rd;";
             }
         }
         static string _MysqlGetTableSQL
         {
             get
             {
-                return "select table_name as tableName, table_comment as tableComment from information_schema.tables where table_schema = 'mintcode_tuotuo' and table_type = 'base table';";
+                return $"select table_name as tableName, table_comment as tableComment from information_schema.tables " +
+                    $"where table_schema = '{_dataBaseName}' and table_type = 'base table';";
             }
         }
 
         static string MysqlGetTableSchemaSQL(string tableName)
         {
             return $"select " +
-               $"COLUMN_NAME as code,is_Nullable as IsNullable,data_type AS datatype,column_key as columnKey,column_comment as comment,CHARACTER_MAXIMUM_LENGTH as DataLength,COLUMN_DEFAULT as defaultValue" +
-               $" from information_schema.columns where table_schema = 'mintcode_tuotuo' and table_name = '{tableName}';";
+               $"COLUMN_NAME as code," +
+               $"is_Nullable as IsNullable," +
+               $"data_type AS datatype," +
+               $"column_key as columnKey," +
+               $"column_comment as comment," +
+               $"CHARACTER_MAXIMUM_LENGTH as DataLength," +
+               $"COLUMN_DEFAULT as defaultValue" +
+               $" from information_schema.columns " +
+               $"where table_schema = '{_dataBaseName}' and table_name = '{tableName}';";
         }
 
         public static List<T> GetTableSchema<T>(string sql)
@@ -51,7 +61,7 @@ namespace DBExportWord
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             Console.OutputEncoding = Encoding.GetEncoding("GB2312");
 
-            Console.WriteLine("开始检索所有表...");
+            Console.WriteLine($"开始检索数据库{_dataBaseName}所有表...");
             var result = GetTableSchema<Table>(_MysqlGetTableSQL);
 
             Console.WriteLine($"总计 {result.Count} 表, 开始生成文档...");
@@ -64,10 +74,10 @@ namespace DBExportWord
             listMapping.Add(new TableMapping() { DBColumn = "columnKey", DocumentColumn = "主键", ColumnWidth = 1000 });
             listMapping.Add(new TableMapping() { DBColumn = "IsNullable", DocumentColumn = "可空", ColumnWidth = 1000 });
             listMapping.Add(new TableMapping() { DBColumn = "defaultValue", DocumentColumn = "缺省", ColumnWidth = 1000 });
-            ExportDocument(result, listMapping, "123.docx");
+            ExportDocument(result, listMapping, $"{_dataBaseName}.docx");
             // select table_name from information_schema.tables where table_schema = 'csdb' and table_type = 'base table';
 
-            Console.WriteLine($"文档生成成功");
+            Console.WriteLine($"数据库文档 {_dataBaseName} 生成成功");
 
             Console.Read();
         }
@@ -133,7 +143,7 @@ namespace DBExportWord
                 foreach (var tableMapping in listMapping)
                 {
                     var currentCell = docTable.GetRow(0).GetCell(i);
-                    currentCell = SetCell(currentCell, tableMapping.DocumentColumn, tableMapping.ColumnWidth, "CCCCCC", true, 11, true);
+                    currentCell = SetCell(currentCell, tableMapping.DocumentColumn, tableMapping.ColumnWidth, "CCCCCC", true, 10, true);
                     //var ppr = currentCell.GetCTTc().AddNewP().AddNewPPr();
                     //space.line="0";
                     //space.lineRule = ST_LineSpacingRule.auto;
