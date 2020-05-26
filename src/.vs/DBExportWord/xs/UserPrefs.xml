@@ -1,0 +1,25 @@
+﻿<Properties StartupConfiguration="{F59D1EB1-B21C-4F1D-8788-21C3BC158B62}|Default">
+  <MonoDevelop.Ide.ItemProperties.DBExportWord PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="DBExportWord/Program.cs">
+    <Files>
+      <File FileName="DBExportWord/Program.cs" Line="21" Column="52" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="DBExportWord" expanded="True">
+            <Node name="DBExportWord" expanded="True">
+              <Node name="Program.cs" selected="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+</Properties>

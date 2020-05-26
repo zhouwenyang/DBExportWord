@@ -4,6 +4,7 @@ using NPOI.OpenXmlFormats.Wordprocessing;
 using NPOI.XWPF.UserModel;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.IO;
 using System.Text;
 using static ExportWordUtils;
@@ -18,35 +19,26 @@ namespace DBExportWord
             get
             {
                 //return $"server=127.0.0.1;database={_dataBaseName};uid=root;pwd=perfect2018;";
-                return $"server=172.16.8.7;database={_dataBaseName};uid=root;pwd=p@ssw0rd;";
+                return $"Data Source=59.202.68.88;Initial Catalog=AzureDevOps_Warehouse;User Id=sa;Password=P5ssw0rd@123;";
             }
         }
         static string _MysqlGetTableSQL
         {
             get
             {
-                return $"select table_name as tableName, table_comment as tableComment from information_schema.tables " +
-                    $"where table_schema = '{_dataBaseName}' and table_type = 'base table';";
+                return $"SELECT NAME as tableName, '' as tableComment FROM SYSOBJECTS WHERE XTYPE='U' ORDER BY NAME";
             }
         }
 
         static string MysqlGetTableSchemaSQL(string tableName)
         {
-            return $"select " +
-               $"COLUMN_NAME as code," +
-               $"is_Nullable as IsNullable," +
-               $"data_type AS datatype," +
-               $"column_key as columnKey," +
-               $"column_comment as comment," +
-               $"CHARACTER_MAXIMUM_LENGTH as DataLength," +
-               $"COLUMN_DEFAULT as defaultValue" +
-               $" from information_schema.columns " +
-               $"where table_schema = '{_dataBaseName}' and table_name = '{tableName}';";
+         
+               return $"SELECT TableName = OBJECT_NAME(c.object_id), code = c.name, IsNullable = c.IS_NULLABLE,datatype=t.name,columnKey='',comment = ex.value,  DataLength=c.max_length,defaultValue = '' FROM sys.columns c LEFT OUTER JOIN sys.extended_properties ex ON ex.major_id = c.object_id AND ex.minor_id = c.column_id AND ex.name = 'MS_Description' left outer join systypes t on c.system_type_id=t.xtype WHERE OBJECTPROPERTY(c.object_id, 'IsMsShipped')=0 AND OBJECT_NAME(c.object_id) ='{tableName}'";
         }
 
         public static List<T> GetTableSchema<T>(string sql)
         {
-            using (var mysql = new MySqlConnection(_MySqlGetConnectionString))
+            using (var mysql = new SqlConnection(_MySqlGetConnectionString))
             {
 
                 mysql.Open();

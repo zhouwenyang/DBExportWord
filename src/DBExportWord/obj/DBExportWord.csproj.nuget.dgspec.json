@@ -1,0 +1,81 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/shuufumihiro/hangzhou/DBExportWord/src/DBExportWord/DBExportWord.csproj": {}
+  },
+  "projects": {
+    "/Users/shuufumihiro/hangzhou/DBExportWord/src/DBExportWord/DBExportWord.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/shuufumihiro/hangzhou/DBExportWord/src/DBExportWord/DBExportWord.csproj",
+        "projectName": "DBExportWord",
+        "projectPath": "/Users/shuufumihiro/hangzhou/DBExportWord/src/DBExportWord/DBExportWord.csproj",
+        "packagesPath": "/Users/shuufumihiro/.nuget/packages/",
+        "outputPath": "/Users/shuufumihiro/hangzhou/DBExportWord/src/DBExportWord/obj/",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "/Users/shuufumihiro/.config/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "netcoreapp2.1"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "netcoreapp2.1": {
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netcoreapp2.1": {
+          "dependencies": {
+            "Dapper": {
+              "target": "Package",
+              "version": "[1.50.5, )"
+            },
+            "Microsoft.NETCore.App": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.1.0, )",
+              "autoReferenced": true
+            },
+            "MySql.Data": {
+              "target": "Package",
+              "version": "[8.0.13, )"
+            },
+            "NPOI": {
+              "target": "Package",
+              "version": "[2.4.1, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/3.1.102/RuntimeIdentifierGraph.json"
+        }
+      },
+      "runtimes": {
+        "win10-x64": {
+          "#import": []
+        }
+      }
+    }
+  }
+}
