@@ -19,7 +19,7 @@ namespace DBExportWord
             get
             {
                 //return $"server=127.0.0.1;database={_dataBaseName};uid=root;pwd=perfect2018;";
-                return $"Data Source=59.202.68.88;Initial Catalog=AzureDevOps_Warehouse;User Id=sa;Password=P5ssw0rd@123;";
+                return $"Data Source=***;Initial Catalog=AzureDevOps_Warehouse;User Id=sa;Password=P5ssw0rd@123;";
             }
         }
         static string _MysqlGetTableSQL
